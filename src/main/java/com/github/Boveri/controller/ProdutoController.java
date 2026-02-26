@@ -1,30 +1,51 @@
 package com.github.Boveri.controller;
 
-import com.github.Boveri.dto.ProdutoInputDTO;
-import com.github.Boveri.dto.ProdutoResponseDTO;
+import com.github.Boveri.dto.ProdutoDTO;
 import com.github.Boveri.entities.Produto;
+import com.github.Boveri.service.ProdutoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.ArrayList;
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/produtos")
 public class ProdutoController {
 
-    @GetMapping
-    public ResponseEntity<List<ProdutoResponseDTO>> getPoduto(){
-        List<ProdutoResponseDTO> dto = ProdutoResponseDTO.creaMock();
-                return ResponseEntity.ok(dto);
-    }
-
     @PostMapping
-    public ResponseEntity<ProdutoResponseDTO> createProduto(
-            @RequestBody ProdutoResponseDTO inputDTO){
-        ProdutoResponseDTO dto = new ProdutoResponseDTO(1L, inputDTO.getNome(), inputDTO.getDescricao(), inputDTO.getValor());
+    public ResponseEntity<ProdutoDTO> createProduto(@RequestBody ProdutoDTO produtoDTO){
 
-        return ResponseEntity.created(null).body(dto);
+        produtoDTO = produtoService.saveProduto(produtoDTO);
+
+        URI uri = ServletUriComponentsBuilder
+                .fromCurrentRequestUri()
+                .path("/{id}")
+                .buildAndExpand(produtoDTO.getId())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(produtoDTO);
     }
+
+    @Autowired
+    private ProdutoService produtoService;
+
+    @GetMapping
+    public ResponseEntity<List<ProdutoDTO>> getAllProdutos(){
+
+        List<ProdutoDTO> list = produtoService.findAllProdutos();
+
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProdutoDTO> getProdutoById(@PathVariable Long id){
+        ProdutoDTO produtoDTO = produtoService.findProdutoById(id);
+
+        return ResponseEntity.ok(produtoDTO);
+     }
+
 
 }
